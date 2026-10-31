@@ -42,9 +42,9 @@ The included Windows Maven Wrapper was executed and downloaded/ran Maven 3.9.11 
 * The applied V1 schema migration was not edited during the review. Future schema changes must use new migrations.
 * The submission ZIP contains source and technical documentation. Interview preparation and personal submission notes are kept outside the project and excluded from the archive.
 
-## Remaining external step
+## Repository and CI
 
-Publish the project to an accessible GitHub/GitLab repository, confirm reviewer access and inspect the remote CI result. The CI workflow is included; local verification is recorded above, and the workflow has not yet run on a published remote repository.
+Source: [GitHub repository](https://github.com/NadavNavaro/Mini-DLP-Service---Check-Point-Full-Stack-Assignment). Automated runs: [Build and verify](https://github.com/NadavNavaro/Mini-DLP-Service---Check-Point-Full-Stack-Assignment/actions/workflows/ci.yml). The tables above record local verification; consult the linked workflow for the latest remote CI result.
 
 ## Optional explanations
 
@@ -56,4 +56,4 @@ The extracted Desktop project was compared with the submission source before edi
 
 Three Unicode regression cases failed before the fix and passed afterward. Keywords now retain their configured spelling after trimming/NFC normalization. A Unicode-aware case-insensitive set rejects equivalent keyword entries without expanding the stored text; an ordered list preserves configuration order. The same three cases run on each database, accounting for the six additional passing cases in the 223 total. No schema migration or API response shape was changed.
 
-The source keeps the existing small feature/layer structure. Optional explanations and the standalone concurrency script remain because they are documented, independently testable additions. No new frameworks or runtime features were added. The Maven XML and the overall scan decision branch were formatted for easier reading. Remote repository publication and CI verification remain external submission steps.
+The source keeps the existing small feature/layer structure. Optional explanations and the standalone concurrency script remain because they are documented, independently testable additions. No new frameworks or runtime features were added. The Maven XML and the overall scan decision branch were formatted for easier reading. CI runs automatically on pushes and pull requests; its latest result is linked above.
