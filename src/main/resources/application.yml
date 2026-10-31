@@ -1,0 +1,33 @@
+# Runtime defaults for local evaluation; environment variables override database connection settings.
+spring:
+  application:
+    name: mini-dlp
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/dlp}
+    username: ${DB_USER:dlp}
+    password: ${DB_PASSWORD:dlp-local-password}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  jackson:
+    mapper:
+      allow-coercion-of-scalars: false
+    deserialization:
+      fail-on-unknown-properties: true
+      accept-float-as-int: false
+server:
+  port: ${PORT:8080}
+  error:
+    include-message: never
+    include-stacktrace: never
+  tomcat:
+    max-http-form-post-size: 2MB
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never

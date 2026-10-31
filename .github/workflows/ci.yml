@@ -1,0 +1,26 @@
+# Verify Java, real PostgreSQL, the Docker stack and external HTTP workflows on every change.
+name: Build and verify
+on: [push, pull_request]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - run: docker info
+      - run: mvn -B -ntp verify
+      - run: docker compose up --build -d --wait --wait-timeout 180
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npx --yes newman@6 run postman/mini-dlp.postman_collection.json --env-var baseUrl=http://localhost:8080
+      - run: node scripts/verify-http.mjs
+      - if: always()
+        run: |
+          docker compose logs || true
+          docker compose down -v

@@ -1,0 +1,1354 @@
+{
+  "info": {
+    "name": "Mini DLP — full lifecycle",
+    "description": "Run in order against the service. The demo rule contains eight configurable keywords. Each repeated whole-word occurrence counts separately; matching ignores case. Generated IDs are captured automatically. Tests cover CRUD, thresholds, multi-rule OR logic, whole-word negatives and invalid requests. A successful run removes its own demo resources. The optional environment overrides baseUrl (default http://localhost:8080). Optional include_details examples explain matched keywords and below-threshold rules; default responses retain the assignment format.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "dtId",
+      "value": ""
+    },
+    {
+      "key": "dsId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "01 Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/actuator/health"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Healthy\", () => pm.expect(pm.response.json().status).to.eql(\"UP\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 Create Data Type",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/datatypes",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Sensitive Keywords\",\n  \"description\": \"Demo sensitive terms; repeated occurrences count separately\",\n  \"type\": \"keywords\",\n  \"content\": [\n    \"password\",\n    \"secret\",\n    \"confidential\",\n    \"token\",\n    \"credential\",\n    \"apikey\",\n    \"privatekey\",\n    \"classified\"\n  ],\n  \"threshold\": 3\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+              "pm.collectionVariables.set(\"dtId\", pm.response.json().id);",
+              "pm.test(\"UUID generated\", () => pm.expect(pm.response.json().id).to.match(/^[0-9a-f-]{36}$/));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 List Data Types",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/datatypes?page=0&size=10"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 Read Data Type",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/datatypes/{{dtId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 Update Data Type",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/datatypes/{{dtId}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Sensitive Keywords\",\n  \"description\": \"Updated description\",\n  \"type\": \"keywords\",\n  \"content\": [\n    \"password\",\n    \"secret\",\n    \"confidential\",\n    \"token\",\n    \"credential\",\n    \"apikey\",\n    \"privatekey\",\n    \"classified\"\n  ],\n  \"threshold\": 3\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 Create Data Set",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/datasets",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Demo Policy\",\n  \"data_type_ids\": [\n    \"{{dtId}}\"\n  ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+              "pm.collectionVariables.set(\"dsId\", pm.response.json().id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 List Data Sets",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/datasets"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 Read Data Set",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/datasets/{{dsId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 Update Data Set",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/datasets/{{dsId}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Updated Policy\",\n  \"data_type_ids\": [\n    \"{{dtId}}\"\n  ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 Scan exact threshold",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/scan",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"text\": \"SECRET secret password secretary\",\n  \"data_set_id\": \"{{dsId}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "const result = pm.response.json();",
+              "pm.test(\"Matched at threshold\", () => { pm.expect(result.status).to.eql(\"match\"); pm.expect(result.detected_objects).to.have.lengthOf(1); pm.expect(result.detected_objects[0].match_count).to.eql(3); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "11 Scan below threshold",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/scan",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"text\": \"secret password\",\n  \"data_set_id\": \"{{dsId}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Exact no-match response\", () => pm.expect(pm.response.json()).to.deep.eql({status:\"not matched\"}));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "12 Scan whole words",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/scan",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"text\": \"secretary topsecret passwords _secret secret2\",\n  \"data_set_id\": \"{{dsId}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Substrings ignored\", () => pm.expect(pm.response.json().status).to.eql(\"not matched\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13 Explain a matching scan",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/scan",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"text\": \"SECRET secret password secretary\",\n  \"data_set_id\": \"{{dsId}}\",\n  \"include_details\": true\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Explanation is consistent with scan result\", () => { const d = pm.response.json().inspection_details.rules[0]; pm.expect(d.threshold).to.eql(3); pm.expect(d.match_count).to.eql(3); pm.expect(d.matched).to.eql(true); pm.expect(d.matched_keywords).to.deep.eql([{keyword:\"password\",match_count:1},{keyword:\"secret\",match_count:2}]); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "14 Explain a below-threshold scan",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/scan",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"text\": \"secret password\",\n  \"data_set_id\": \"{{dsId}}\",\n  \"include_details\": true\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Explanation is consistent with scan result\", () => { const r = pm.response.json(); const d = r.inspection_details.rules[0]; pm.expect(r.status).to.eql(\"not matched\"); pm.expect(d.match_count).to.eql(2); pm.expect(d.matched).to.eql(false); pm.expect(d.reason).to.include(\"below threshold 3\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "15 Reject referenced rule deletion",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/api/datatypes/{{dtId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "16 Reject invalid threshold",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/datatypes",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Sensitive Keywords\",\n  \"description\": \"Demo sensitive terms; repeated occurrences count separately\",\n  \"type\": \"keywords\",\n  \"content\": [\n    \"password\",\n    \"secret\",\n    \"confidential\",\n    \"token\",\n    \"credential\",\n    \"apikey\",\n    \"privatekey\",\n    \"classified\"\n  ],\n  \"threshold\": 0\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "17 Reject duplicate keywords",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/datatypes",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Sensitive Keywords\",\n  \"description\": \"Demo sensitive terms; repeated occurrences count separately\",\n  \"type\": \"keywords\",\n  \"content\": [\n    \"SECRET\",\n    \" secret \"\n  ],\n  \"threshold\": 3\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "18 Reject missing reference",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/datasets",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Invalid\",\n  \"data_type_ids\": [\n    \"00000000-0000-0000-0000-000000000000\"\n  ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "19 Missing Data Set",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/scan",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"text\": \"secret\",\n  \"data_set_id\": \"00000000-0000-0000-0000-000000000000\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "20 Invalid UUID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/datatypes/invalid"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "21 All eight words mixed case",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/scan",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"text\": \"PASSWORD secret Confidential TOKEN credential APIKEY PrivateKey CLASSIFIED\",\n  \"data_set_id\": \"{{dsId}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Expected occurrence count\", () => { const r = pm.response.json(); pm.expect(r.status).to.eql(\"match\"); pm.expect(r.detected_objects[0].match_count).to.eql(8); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "22 Repeated words count separately",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/scan",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"text\": \"secret secret password\",\n  \"data_set_id\": \"{{dsId}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Expected occurrence count\", () => { const r = pm.response.json(); pm.expect(r.status).to.eql(\"match\"); pm.expect(r.detected_objects[0].match_count).to.eql(3); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "23 Four occurrences of the same word",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/scan",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"text\": \"Secret SECRET secret SeCrEt\",\n  \"data_set_id\": \"{{dsId}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Expected occurrence count\", () => { const r = pm.response.json(); pm.expect(r.status).to.eql(\"match\"); pm.expect(r.detected_objects[0].match_count).to.eql(4); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "24 Ten occurrences across eight keywords",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/scan",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"text\": \"password secret confidential token credential apikey privatekey classified secret password\",\n  \"data_set_id\": \"{{dsId}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Expected occurrence count\", () => { const r = pm.response.json(); pm.expect(r.status).to.eql(\"match\"); pm.expect(r.detected_objects[0].match_count).to.eql(10); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "25 Substrings of all eight words are ignored",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/scan",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"text\": \"passwords secretary confidentiality tokens credentials apikeys privatekeys unclassified\",\n  \"data_set_id\": \"{{dsId}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Expected occurrence count\", () => { const r = pm.response.json(); pm.expect(r).to.deep.eql({status:\"not matched\"}); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "26 Punctuation separates whole words",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/scan",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"text\": \"password! (secret), confidential; token: credential/apikey privatekey-classified\",\n  \"data_set_id\": \"{{dsId}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Expected occurrence count\", () => { const r = pm.response.json(); pm.expect(r.status).to.eql(\"match\"); pm.expect(r.detected_objects[0].match_count).to.eql(8); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "27 Create second rule",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/datatypes",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Token rule\",\n  \"description\": \"Demo sensitive terms; repeated occurrences count separately\",\n  \"type\": \"keywords\",\n  \"content\": [\n    \"token\"\n  ],\n  \"threshold\": 1\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+              "pm.collectionVariables.set(\"dtSecondId\", pm.response.json().id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "28 Attach both rules",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/datasets/{{dsId}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"OR Policy\",\n  \"data_type_ids\": [\n    \"{{dtId}}\",\n    \"{{dtSecondId}}\"\n  ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "29 OR logic with one passing rule",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/scan",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"text\": \"token secret\",\n  \"data_set_id\": \"{{dsId}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Only token rule passes\", () => { const r = pm.response.json(); pm.expect(r.status).to.eql(\"match\"); pm.expect(r.detected_objects).to.have.lengthOf(1); pm.expect(r.detected_objects[0].id).to.eql(pm.collectionVariables.get(\"dtSecondId\")); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "30 Both rules pass independently",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/scan",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"text\": \"secret secret password token\",\n  \"data_set_id\": \"{{dsId}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"All passing rules returned\", () => { const r = pm.response.json(); pm.expect(r.detected_objects).to.have.lengthOf(2); const counts = r.detected_objects.map(d => d.match_count).sort(); pm.expect(counts).to.deep.eql([1,4]); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "31 Empty text never matches",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/scan",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"text\": \"\",\n  \"data_set_id\": \"{{dsId}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"No match\", () => pm.expect(pm.response.json()).to.deep.eql({status:\"not matched\"}));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "32 Reject null scan text",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/scan",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"text\": null,\n  \"data_set_id\": \"{{dsId}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "33 Reject string threshold",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/datatypes",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Sensitive Keywords\",\n  \"description\": \"Demo sensitive terms; repeated occurrences count separately\",\n  \"type\": \"keywords\",\n  \"content\": [\n    \"password\",\n    \"secret\",\n    \"confidential\",\n    \"token\",\n    \"credential\",\n    \"apikey\",\n    \"privatekey\",\n    \"classified\"\n  ],\n  \"threshold\": \"3\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "34 Reject fractional threshold",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/datatypes",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Sensitive Keywords\",\n  \"description\": \"Demo sensitive terms; repeated occurrences count separately\",\n  \"type\": \"keywords\",\n  \"content\": [\n    \"password\",\n    \"secret\",\n    \"confidential\",\n    \"token\",\n    \"credential\",\n    \"apikey\",\n    \"privatekey\",\n    \"classified\"\n  ],\n  \"threshold\": 1.5\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "35 Reject unsupported rule type",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/datatypes",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Sensitive Keywords\",\n  \"description\": \"Demo sensitive terms; repeated occurrences count separately\",\n  \"type\": \"regex\",\n  \"content\": [\n    \"password\",\n    \"secret\",\n    \"confidential\",\n    \"token\",\n    \"credential\",\n    \"apikey\",\n    \"privatekey\",\n    \"classified\"\n  ],\n  \"threshold\": 3\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "36 Reject duplicate rule IDs",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/datasets",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Bad\",\n  \"data_type_ids\": [\n    \"{{dtId}}\",\n    \"{{dtId}}\"\n  ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "37 Reject invalid pagination consistently",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/datatypes?size=0"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+              "pm.test(\"Problem response\", () => pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/problem+json\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "38 Reject unsupported method",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "url": "{{baseUrl}}/api/datatypes"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 405\", () => pm.response.to.have.status(405));",
+              "pm.test(\"Allow header\", () => pm.expect(pm.response.headers.has(\"Allow\")).to.eql(true));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "39 Unknown endpoint",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/unknown"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "40 Cannot delete second rule while referenced",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/api/datatypes/{{dtSecondId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "41 Remove policy rule references",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/datasets/{{dsId}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Empty Policy\",\n  \"data_type_ids\": []\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "42 Empty policy never matches",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/scan",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"text\": \"secret password token\",\n  \"data_set_id\": \"{{dsId}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"No match\", () => pm.expect(pm.response.json()).to.deep.eql({status:\"not matched\"}));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "43 Delete unreferenced second rule",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/api/datatypes/{{dtSecondId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "44 Delete Data Set",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/api/datasets/{{dsId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "45 Delete Data Type",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/api/datatypes/{{dtId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "46 Confirm deleted",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/datatypes/{{dtId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
