@@ -1,6 +1,6 @@
 # Mini DLP - Check Point Take-Home Assignment
 
-**Author: Nadav**
+**Author: Nadav Navaro**
 
 **Assignment: Check Point - Full Stack / DLP Team**
 
