@@ -37,7 +37,6 @@ public class DataTypeService {
         return DataTypeDto.Response.from(repository.save(entity));
     }
 
-    /** Replaces a rule in one transaction, so every referencing policy sees the updated definition. */
     @Transactional
     public DataTypeDto.Response update(UUID id, DataTypeDto.Request input) {
         var entity = require(id);
@@ -60,7 +59,6 @@ public class DataTypeService {
         return repository.findById(id).orElseThrow(() -> ApiException.notFound("Data Type"));
     }
 
-    /** Normalizes a complete replacement before mutating the entity; duplicates cannot inflate scan counts. */
     private void apply(DataType entity, DataTypeDto.Request input) {
         // Compare without case but preserve spelling: lowercasing can expand some Unicode characters.
         var unique = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
@@ -73,6 +71,7 @@ public class DataTypeService {
             keywords.add(keyword);
         }
         if (input.name().strip().isBlank()) throw ApiException.invalid("Name must not be blank");
-        entity.update(input.name().strip(), input.description().strip(), keywords, input.threshold());
+        String description = input.description() == null ? "" : input.description().strip();
+        entity.update(input.name().strip(), description, keywords, input.threshold());
     }
 }

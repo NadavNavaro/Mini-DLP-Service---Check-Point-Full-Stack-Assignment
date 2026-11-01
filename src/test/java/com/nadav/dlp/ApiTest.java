@@ -29,6 +29,23 @@ class ApiTest {
     private static final String[] DEMO_KEYWORDS = {"password", "secret", "confidential", "token",
         "credential", "apikey", "privatekey", "classified"};
 
+    @ParameterizedTest
+    @ValueSource(strings = {"missing", "null", "blank"})
+    void optionalDescriptionDefaultsToEmptyOnCreateAndReplacement(String mode) throws Exception {
+        var body = new HashMap<>(rule("Optional description", 1, "secret"));
+        if (mode.equals("missing")) body.remove("description");
+        else body.put("description", mode.equals("null") ? null : "   ");
+        var created = create("/api/datatypes", body);
+        assertThat(created.get("description").asText()).isEmpty();
+        String path = "/api/datatypes/" + created.get("id").asText();
+        mvc.perform(put(path).contentType(MediaType.APPLICATION_JSON)
+            .content(json.writeValueAsString(rule("Existing description", 1, "secret"))))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.description").value("Demo"));
+        mvc.perform(put(path).contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(body)))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.description").value(""));
+        mvc.perform(get(path)).andExpect(status().isOk()).andExpect(jsonPath("$.description").value(""));
+    }
+
     @Test
     void unicodeCaseMatchingPreservesKeywordsWithoutExpandingTheirLength() throws Exception {
         String keyword = "İ".repeat(100);
@@ -155,7 +172,7 @@ class ApiTest {
             valid.replace("\"Rule\"", "null"),
             valid.replace("\"Rule\"", "\"\""),
             valid.replace("\"Rule\"", "\"" + "a".repeat(121) + "\""),
-            valid.replace("\"Demo\"", "null"),
+            valid.replace("\"Demo\"", "[]"),
             valid.replace("\"Demo\"", "\"" + "a".repeat(1001) + "\""),
             valid.replace("\"keywords\"", "null"),
             valid.replace("\"keywords\"", "\"regex\""),

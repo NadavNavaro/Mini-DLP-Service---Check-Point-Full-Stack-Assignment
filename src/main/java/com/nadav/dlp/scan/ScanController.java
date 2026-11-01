@@ -3,7 +3,6 @@ package com.nadav.dlp.scan;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
-/** Accepts validated text and a policy ID, then returns a synchronous inspection result. */
 @RestController
 @RequestMapping("/api/scan")
 public class ScanController {

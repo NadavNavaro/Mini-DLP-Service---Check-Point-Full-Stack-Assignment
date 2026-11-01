@@ -4,7 +4,6 @@ import com.nadav.dlp.common.ApiException;
 import com.nadav.dlp.dataset.DataSetRepository;
 import com.nadav.dlp.datatype.DataType;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -20,8 +19,8 @@ public class ScanService {
         this.matcher = matcher;
     }
 
-    /** Reads one consistent policy snapshot; counts are local to this scan and never persisted. */
-    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
+    // The fetch query loads the whole policy in one statement; default isolation is sufficient.
+    @Transactional(readOnly = true)
     public ScanDto.Response scan(ScanDto.Request request) {
         var dataSet = repository.findForScan(request.dataSetId())
             .orElseThrow(() -> ApiException.notFound("Data Set"));

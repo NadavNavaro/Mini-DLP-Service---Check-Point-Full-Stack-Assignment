@@ -125,7 +125,7 @@
         "url": "{{baseUrl}}/api/datatypes/{{dtId}}",
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"name\": \"Sensitive Keywords\",\n  \"description\": \"Updated description\",\n  \"type\": \"keywords\",\n  \"content\": [\n    \"password\",\n    \"secret\",\n    \"confidential\",\n    \"token\",\n    \"credential\",\n    \"apikey\",\n    \"privatekey\",\n    \"classified\"\n  ],\n  \"threshold\": 3\n}",
+          "raw": "{\n  \"name\": \"Sensitive Keywords\",\n  \"description\": null,\n  \"type\": \"keywords\",\n  \"content\": [\n    \"password\",\n    \"secret\",\n    \"confidential\",\n    \"token\",\n    \"credential\",\n    \"apikey\",\n    \"privatekey\",\n    \"classified\"\n  ],\n  \"threshold\": 3\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -139,7 +139,8 @@
           "script": {
             "type": "text/javascript",
             "exec": [
-              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Null description defaults to empty\", () => pm.expect(pm.response.json().description).to.eql(\"\"));"
             ]
           }
         }
@@ -808,7 +809,7 @@
         "url": "{{baseUrl}}/api/datatypes",
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"name\": \"Token rule\",\n  \"description\": \"Demo sensitive terms; repeated occurrences count separately\",\n  \"type\": \"keywords\",\n  \"content\": [\n    \"token\"\n  ],\n  \"threshold\": 1\n}",
+          "raw": "{\n  \"name\": \"Token rule\",\n  \"type\": \"keywords\",\n  \"content\": [\n    \"token\"\n  ],\n  \"threshold\": 1\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -823,7 +824,8 @@
             "type": "text/javascript",
             "exec": [
               "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
-              "pm.collectionVariables.set(\"dtSecondId\", pm.response.json().id);"
+              "pm.collectionVariables.set(\"dtSecondId\", pm.response.json().id);",
+              "pm.test(\"Missing description defaults to empty\", () => pm.expect(pm.response.json().description).to.eql(\"\"));"
             ]
           }
         }

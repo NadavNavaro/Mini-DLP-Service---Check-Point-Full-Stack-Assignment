@@ -8,7 +8,6 @@ import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
-/** Exposes policy CRUD endpoints, including bounded list sizes and full replacement updates. */
 @RestController
 @RequestMapping("/api/datasets")
 public class DataSetController {

@@ -5,7 +5,6 @@ import jakarta.validation.constraints.*;
 import java.util.List;
 import java.util.UUID;
 
-/** Defines synchronous scan input, assignment-compatible output and opt-in inspection explanations. */
 public final class ScanDto {
     private ScanDto() {}
     public record Request(@NotNull @Size(max = 100000) String text,

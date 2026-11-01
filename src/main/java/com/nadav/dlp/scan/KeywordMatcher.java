@@ -17,7 +17,6 @@ public class KeywordMatcher {
         return Normalizer.normalize(text, Normalizer.Form.NFC);
     }
 
-    /** Counts all occurrences of each configured literal, ignoring case and excluding embedded substrings. */
     public int count(String normalizedText, List<String> keywords) {
         return inspect(normalizedText, keywords, false).count();
     }

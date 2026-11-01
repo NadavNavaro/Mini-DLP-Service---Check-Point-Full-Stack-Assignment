@@ -35,7 +35,7 @@ Alternatively, with Node.js installed:
 npx --yes newman@6 run postman/mini-dlp.postman_collection.json
 ```
 
-The collection contains **46 requests and 65 assertions**, including detailed scan explanations and invalid-input cases.
+The collection contains **46 requests and 67 assertions**, including detailed scan explanations and invalid-input cases.
 
 | Method | Endpoint | Purpose |
 |---|---|---|
@@ -45,7 +45,7 @@ The collection contains **46 requests and 65 assertions**, including detailed sc
 | GET / PUT / DELETE | `/api/datasets/{id}` | Read / replace / delete a policy |
 | POST | `/api/scan` | Inspect text using one policy |
 
-Create a rule:
+Create a rule (`description` is optional and defaults to an empty string):
 
 ```json
 {
@@ -103,7 +103,7 @@ node scripts/verify-http.mjs
 
 It verifies 120 scans in batches of eight and removes temporary data. This is a correctness check, not a production capacity benchmark. GitHub Actions automates Java, PostgreSQL, Docker, Postman and concurrent HTTP checks.
 
-* [Technical reference](docs/REFERENCE.md): input limits, HTTP errors, complete response examples, configuration and tradeoffs.
-* [Test matrix](docs/TESTING.md) and [verified results](docs/VERIFICATION.md): 223 passing Java test cases and real HTTP checks.
+* [Technical reference](docs/REFERENCE.md): input limits, HTTP errors, configuration and tradeoffs.
+* [Test matrix](docs/TESTING.md) and [verified results](docs/VERIFICATION.md): 229 passing Java test cases and real HTTP checks.
 
 This local evaluation service does not implement authentication or production deployment controls.

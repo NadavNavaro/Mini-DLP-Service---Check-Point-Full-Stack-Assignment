@@ -6,7 +6,6 @@ import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 import java.util.UUID;
 
-/** Provides policy persistence and a dedicated fetch query for complete scan configuration. */
 public interface DataSetRepository extends JpaRepository<DataSet, UUID> {
     boolean existsByDataTypes_Id(UUID id);
 

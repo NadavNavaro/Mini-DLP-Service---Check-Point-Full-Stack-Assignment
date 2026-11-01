@@ -21,8 +21,6 @@ server:
   error:
     include-message: never
     include-stacktrace: never
-  tomcat:
-    max-http-form-post-size: 2MB
 management:
   endpoints:
     web:

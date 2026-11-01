@@ -8,7 +8,6 @@ import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
-/** Exposes rule CRUD endpoints and delegates business decisions to DataTypeService. */
 @RestController
 @RequestMapping("/api/datatypes")
 public class DataTypeController {

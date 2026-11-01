@@ -5,7 +5,6 @@ import jakarta.validation.constraints.*;
 import java.util.List;
 import java.util.UUID;
 
-/** Defines policy requests using rule IDs and stable responses without serializing JPA relationships. */
 public final class DataSetDto {
     private DataSetDto() {}
     /** An empty membership list is valid; duplicate or missing rule IDs are rejected by the service. */
