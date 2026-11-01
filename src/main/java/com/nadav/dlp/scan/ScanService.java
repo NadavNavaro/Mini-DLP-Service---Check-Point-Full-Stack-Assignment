@@ -1,50 +1,45 @@
 package com.nadav.dlp.scan;
 
-import com.nadav.dlp.common.ApiException;
-import com.nadav.dlp.dataset.DataSetRepository;
-import com.nadav.dlp.datatype.DataType;
+import com.nadav.dlp.scan.dto.*;
+
+import com.nadav.dlp.dataset.DataSetService;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 /** Evaluates all rules in a selected policy and returns every rule meeting its own threshold. */
 @Service
 public class ScanService {
-    private final DataSetRepository repository;
+    private final DataSetService policies;
     private final KeywordMatcher matcher;
-    public ScanService(DataSetRepository repository, KeywordMatcher matcher) {
-        this.repository = repository;
+    public ScanService(DataSetService policies, KeywordMatcher matcher) {
+        this.policies = policies;
         this.matcher = matcher;
     }
 
-    // The fetch query loads the whole policy in one statement; default isolation is sufficient.
-    @Transactional(readOnly = true)
-    public ScanDto.Response scan(ScanDto.Request request) {
-        var dataSet = repository.findForScan(request.dataSetId())
-            .orElseThrow(() -> ApiException.notFound("Data Set"));
+    public ScanResponse scan(ScanRequest request) {
+        var dataSet = policies.loadForScan(request.dataSetId());
         String text = matcher.normalize(request.text());
-        var detections = new ArrayList<ScanDto.Detection>();
-        var ruleDetails = new ArrayList<ScanDto.RuleDetail>();
-        for (var type : dataSet.getDataTypes().stream().sorted(Comparator.comparing(DataType::getId)).toList()) {
+        var detections = new ArrayList<DetectedObject>();
+        var ruleDetails = new ArrayList<RuleInspection>();
+        for (var type : dataSet.rules()) {
             // Do not stop at the threshold: the API must report the complete occurrence count.
-            var inspection = matcher.inspect(text, type.getContent(), request.detailsRequested());
+            var inspection = matcher.inspect(text, type.keywords(), request.detailsRequested());
             int count = inspection.count();
-            boolean matched = count >= type.getThreshold();
+            boolean matched = count >= type.threshold();
             if (matched) {
-                detections.add(new ScanDto.Detection(type.getId(), type.getName(), count));
+                detections.add(new DetectedObject(type.id(), type.name(), count));
             }
             if (request.detailsRequested()) {
                 String reason = "Whole-word match count " + count + (matched ? " is at least threshold " : " is below threshold ")
-                    + type.getThreshold() + ".";
+                    + type.threshold() + ".";
                 var keywords = inspection.matchedKeywords().stream()
-                    .map(k -> new ScanDto.KeywordDetection(k.keyword(), k.count())).toList();
-                ruleDetails.add(new ScanDto.RuleDetail(type.getId(), type.getName(), type.getThreshold(),
+                    .map(k -> new MatchedKeyword(k.keyword(), k.count())).toList();
+                ruleDetails.add(new RuleInspection(type.id(), type.name(), type.threshold(),
                     count, matched, reason, keywords));
             }
         }
-        ScanDto.InspectionDetails details = null;
+        InspectionDetails details = null;
         if (request.detailsRequested()) {
             String reason;
             if (ruleDetails.isEmpty()) {
@@ -54,8 +49,8 @@ public class ScanService {
             } else {
                 reason = "At least one Data Type reached its own threshold (OR logic).";
             }
-            details = new ScanDto.InspectionDetails(dataSet.getId(), dataSet.getName(), reason, List.copyOf(ruleDetails));
+            details = new InspectionDetails(dataSet.id(), dataSet.name(), reason, List.copyOf(ruleDetails));
         }
-        return ScanDto.Response.of(detections, details);
+        return ScanResponse.of(detections, details);
     }
 }

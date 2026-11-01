@@ -1,5 +1,7 @@
 package com.nadav.dlp.datatype;
 
+import com.nadav.dlp.datatype.dto.*;
+
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import org.springframework.http.ResponseEntity;
@@ -14,17 +16,22 @@ public class DataTypeController {
     private final DataTypeService service;
     public DataTypeController(DataTypeService service) { this.service = service; }
     @GetMapping
-    public List<DataTypeDto.Response> list(@RequestParam(defaultValue = "0") @Min(0) int page,
-            @RequestParam(defaultValue = "50") @Min(1) @Max(100) int size) { return service.list(page, size); }
+    public ResponseEntity<List<DataTypeResponse>> list(@RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "50") @Min(1) @Max(100) int size) {
+        var result = service.list(page, size);
+        return ResponseEntity.ok().header("X-Total-Count", Long.toString(result.getTotalElements()))
+            .header("X-Page", Integer.toString(page)).header("X-Page-Size", Integer.toString(size))
+            .body(result.getContent());
+    }
     @GetMapping("/{id}")
-    public DataTypeDto.Response get(@PathVariable UUID id) { return service.get(id); }
+    public DataTypeResponse get(@PathVariable UUID id) { return service.get(id); }
     @PostMapping
-    public ResponseEntity<DataTypeDto.Response> create(@Valid @RequestBody DataTypeDto.Request input) {
+    public ResponseEntity<DataTypeResponse> create(@Valid @RequestBody DataTypeRequest input) {
         var result = service.create(input);
         return ResponseEntity.created(URI.create("/api/datatypes/" + result.id())).body(result);
     }
     @PutMapping("/{id}")
-    public DataTypeDto.Response update(@PathVariable UUID id, @Valid @RequestBody DataTypeDto.Request input) {
+    public DataTypeResponse update(@PathVariable UUID id, @Valid @RequestBody DataTypeRequest input) {
         return service.update(id, input);
     }
     @DeleteMapping("/{id}")

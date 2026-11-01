@@ -1,14 +1,14 @@
 # Verification
 
-Verified locally on 2026-11-01 after simplifying configuration and description handling.
+Verified locally on 2026-11-01 after the feature-boundary, DTO and cache refactor.
 
 | Check | Result |
 |---|---|
-| Clean Maven build and tests | 229 passed, zero failures/errors/skips |
-| Real PostgreSQL subset | 85 passed (82 shared API cases and 3 integration cases) |
-| Java 21 Docker build | 144 H2/matcher/query cases passed; PostgreSQL suites intentionally skip inside the build container |
+| Clean Maven build and tests | 234 passed, zero failures/errors/skips |
+| Real PostgreSQL subset | 86 passed (83 shared API cases and 3 integration cases) |
+| Java 21 Docker build | 148 H2/matcher/query cases passed; PostgreSQL suites intentionally skip inside the build container |
 | Running Docker + PostgreSQL | Both containers healthy |
-| Postman / Newman | 46 requests and 67 assertions passed |
+| Postman / Newman | 46 requests and 71 assertions passed |
 | Concurrent HTTP scans | 120 passed, eight requests per batch |
 
 The host uses Temurin 25 with Java 21 compilation; Docker build/runtime and GitHub Actions use Java 21. PostgreSQL is isolated in Testcontainers for integration tests and in its own persistent Compose service for runtime checks.
@@ -31,3 +31,9 @@ The ZIP contains only source and technical documentation; personal interview/sub
 [Source repository](https://github.com/NadavNavaro/Mini-DLP-Service---Check-Point-Full-Stack-Assignment) | [Build and verify workflow](https://github.com/NadavNavaro/Mini-DLP-Service---Check-Point-Full-Stack-Assignment/actions/workflows/ci.yml)
 
 The table records local checks. The linked workflow is the source for the latest remote CI result.
+
+## Developer-review follow-up
+
+Public API DTOs now have separate files in each feature's dto package. `ScanService` loads an immutable policy snapshot through `DataSetService`; entities/repositories are not used by the matching workflow. The one-query regression still passes, and snapshot contents remain unchanged after a later rule edit.
+
+The bounded 512-entry pattern cache passed reuse and eviction checks; concurrent scans retain independent Matcher state. API tests prime the cache before changing a rule and verify the new rule takes effect. Blocking-policy errors include names/IDs (up to ten), with a generic safe fallback for database races. Both list APIs retain JSON arrays and expose pagination headers. Postman verifies those headers and blocking IDs in addition to all existing cases.

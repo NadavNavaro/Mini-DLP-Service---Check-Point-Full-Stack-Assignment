@@ -16,6 +16,22 @@ class KeywordMatcherTest {
     private final KeywordMatcher matcher = new KeywordMatcher();
 
     @Test
+    void compiledPatternsAreReusedButEachScanHasIndependentCounts() {
+        var pattern = matcher.patternFor("secret");
+        assertThat(matcher.count("secret SECRET", List.of("secret"))).isEqualTo(2);
+        assertThat(matcher.patternFor("secret")).isSameAs(pattern);
+        assertThat(matcher.count("ordinary", List.of("secret"))).isZero();
+    }
+
+    @Test
+    void cacheEvictsOldPatternsWithoutChangingResults() {
+        var old = matcher.patternFor("secret");
+        for (int i = 0; i < KeywordMatcher.MAX_CACHED_PATTERNS; i++) matcher.patternFor("word" + i);
+        assertThat(matcher.patternFor("secret")).isNotSameAs(old);
+        assertThat(matcher.count("secret SECRET secretary", List.of("secret"))).isEqualTo(2);
+    }
+
+    @Test
     void optionalKeywordDetailsAgreeWithTotalAndDoNotIncludeUnmatchedWords() {
         var result = matcher.inspect("Secret SECRET password secretary", List.of("secret", "password", "token"), true);
         assertThat(result.count()).isEqualTo(3);

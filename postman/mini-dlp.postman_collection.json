@@ -87,7 +87,8 @@
           "script": {
             "type": "text/javascript",
             "exec": [
-              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Pagination metadata headers\", () => { pm.expect(Number(pm.response.headers.get(\"X-Total-Count\"))).to.be.at.least(1); pm.expect(pm.response.headers.get(\"X-Page\")).to.eql(\"0\"); pm.expect(Number(pm.response.headers.get(\"X-Page-Size\"))).to.be.above(0); pm.expect(pm.response.json()).to.be.an(\"array\"); });"
             ]
           }
         }
@@ -193,7 +194,8 @@
           "script": {
             "type": "text/javascript",
             "exec": [
-              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Pagination metadata headers\", () => { pm.expect(Number(pm.response.headers.get(\"X-Total-Count\"))).to.be.at.least(1); pm.expect(pm.response.headers.get(\"X-Page\")).to.eql(\"0\"); pm.expect(Number(pm.response.headers.get(\"X-Page-Size\"))).to.be.above(0); pm.expect(pm.response.json()).to.be.an(\"array\"); });"
             ]
           }
         }
@@ -435,7 +437,8 @@
           "script": {
             "type": "text/javascript",
             "exec": [
-              "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));"
+              "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
+              "pm.test(\"Blocking policy is identified\", () => pm.expect(pm.response.json().detail).to.include(pm.collectionVariables.get(\"dsId\")));"
             ]
           }
         }
@@ -1203,7 +1206,8 @@
           "script": {
             "type": "text/javascript",
             "exec": [
-              "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));"
+              "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
+              "pm.test(\"Blocking policy is identified\", () => pm.expect(pm.response.json().detail).to.include(pm.collectionVariables.get(\"dsId\")));"
             ]
           }
         }

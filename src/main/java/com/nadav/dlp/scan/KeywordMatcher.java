@@ -4,6 +4,9 @@ import org.springframework.stereotype.Component;
 import java.text.Normalizer;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 /** Counts literal whole-word occurrences without retaining request-specific state. */
@@ -11,6 +14,21 @@ import java.util.regex.Pattern;
 public class KeywordMatcher {
     // A word consists of Unicode letters, marks, numbers and underscore.
     private static final String WORD = "[\\p{L}\\p{M}\\p{N}_]";
+    static final int MAX_CACHED_PATTERNS = 512;
+    // Pattern is immutable; each request still creates its own Matcher. LRU bounds retained keywords.
+    private final Map<String, Pattern> patterns = Collections.synchronizedMap(
+        new LinkedHashMap<>(64, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<String, Pattern> eldest) {
+                return size() > MAX_CACHED_PATTERNS;
+            }
+        });
+
+    Pattern patternFor(String keyword) {
+        return patterns.computeIfAbsent(keyword, word -> Pattern.compile(
+            "(?<!" + WORD + ")" + Pattern.quote(word) + "(?!" + WORD + ")",
+            Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE));
+    }
 
     /** Converts equivalent Unicode spellings to NFC before matching without changing word boundaries. */
     public String normalize(String text) {
@@ -29,8 +47,7 @@ public class KeywordMatcher {
         int count = 0;
         var matches = new ArrayList<KeywordCount>();
         for (String keyword : keywords) {
-            var pattern = Pattern.compile("(?<!" + WORD + ")" + Pattern.quote(keyword) + "(?!" + WORD + ")",
-                Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+            var pattern = patternFor(keyword);
             var matcher = pattern.matcher(normalizedText);
             int keywordCount = 0;
             // Assumption: count occurrences, not distinct words. "secret secret" is two matches.

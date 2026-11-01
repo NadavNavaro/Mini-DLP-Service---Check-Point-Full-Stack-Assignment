@@ -5,9 +5,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.List;
+import org.springframework.data.domain.Pageable;
 
 public interface DataSetRepository extends JpaRepository<DataSet, UUID> {
-    boolean existsByDataTypes_Id(UUID id);
+    List<DataSet> findByDataTypes_Id(UUID id, Pageable pageable);
 
     // Fetch only for scans; collection fetch joins must not be applied to paginated lists.
     @Query("select distinct ds from DataSet ds left join fetch ds.dataTypes dt "

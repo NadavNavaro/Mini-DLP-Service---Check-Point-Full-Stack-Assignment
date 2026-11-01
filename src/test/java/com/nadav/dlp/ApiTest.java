@@ -29,6 +29,16 @@ class ApiTest {
     private static final String[] DEMO_KEYWORDS = {"password", "secret", "confidential", "token",
         "credential", "apikey", "privatekey", "classified"};
 
+    @Test
+    void policyListsExposePaginationHeadersWithoutChangingTheArrayBody() throws Exception {
+        dataset();
+        dataset();
+        var response = mvc.perform(get("/api/datasets?page=0&size=1")).andExpect(status().isOk())
+            .andExpect(header().string("X-Page", "0")).andExpect(header().string("X-Page-Size", "1"))
+            .andExpect(jsonPath("$").isArray()).andReturn().getResponse();
+        assertThat(Long.parseLong(response.getHeader("X-Total-Count"))).isGreaterThanOrEqualTo(2);
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"missing", "null", "blank"})
     void optionalDescriptionDefaultsToEmptyOnCreateAndReplacement(String mode) throws Exception {
@@ -231,6 +241,7 @@ class ApiTest {
         String dt = type(1, "secret").get("id").asText();
         String first = dataset(dt);
         String second = dataset(dt);
+        assertThat(scan(first, "secret").get("status").asText()).isEqualTo("match");
         mvc.perform(put("/api/datatypes/" + dt).contentType(MediaType.APPLICATION_JSON)
             .content(json.writeValueAsString(rule("Updated", 2, "password"))))
             .andExpect(status().isOk());
@@ -278,6 +289,9 @@ class ApiTest {
     void paginatedListsAreStableAndDoNotDuplicateIds() throws Exception {
         for (int i = 0; i < 4; i++) type(1, "paging" + i);
         var first = mvc.perform(get("/api/datatypes?page=0&size=2")).andExpect(status().isOk()).andReturn();
+        assertThat(first.getResponse().getHeader("X-Page")).isEqualTo("0");
+        assertThat(first.getResponse().getHeader("X-Page-Size")).isEqualTo("2");
+        assertThat(Long.parseLong(first.getResponse().getHeader("X-Total-Count"))).isGreaterThanOrEqualTo(4);
         var repeated = mvc.perform(get("/api/datatypes?page=0&size=2")).andExpect(status().isOk()).andReturn();
         var second = mvc.perform(get("/api/datatypes?page=1&size=2")).andExpect(status().isOk()).andReturn();
         assertThat(first.getResponse().getContentAsString()).isEqualTo(repeated.getResponse().getContentAsString());
@@ -343,7 +357,8 @@ class ApiTest {
         mvc.perform(get("/api/datasets/" + ds)).andExpect(status().isOk())
             .andExpect(jsonPath("$.data_type_ids[0]").value(dt));
         mvc.perform(get("/api/datasets")).andExpect(status().isOk());
-        mvc.perform(delete("/api/datatypes/" + dt)).andExpect(status().isConflict());
+        mvc.perform(delete("/api/datatypes/" + dt)).andExpect(status().isConflict())
+            .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString(ds)));
         mvc.perform(put("/api/datasets/" + ds).contentType(MediaType.APPLICATION_JSON)
             .content(json.writeValueAsString(Map.of("name", "Empty", "data_type_ids", List.of()))))
             .andExpect(status().isOk()).andExpect(jsonPath("$.data_type_ids").isEmpty());

@@ -1,8 +1,11 @@
 package com.nadav.dlp.datatype;
 
+import com.nadav.dlp.datatype.dto.*;
+
 import com.nadav.dlp.common.ApiException;
 import com.nadav.dlp.dataset.DataSetRepository;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -22,34 +25,37 @@ public class DataTypeService {
         this.dataSets = dataSets;
     }
 
-    public List<DataTypeDto.Response> list(int page, int size) {
+    public Page<DataTypeResponse> list(int page, int size) {
         // JPA offsets are signed integers even though PageRequest calculates them as long values.
         if ((long) page * size > Integer.MAX_VALUE) throw ApiException.invalid("Pagination offset is too large");
-        return repository.findAll(PageRequest.of(page, size, Sort.by("id"))).stream()
-            .map(DataTypeDto.Response::from).toList();
+        return repository.findAll(PageRequest.of(page, size, Sort.by("id"))).map(DataTypeResponse::from);
     }
-    public DataTypeDto.Response get(UUID id) { return DataTypeDto.Response.from(require(id)); }
+    public DataTypeResponse get(UUID id) { return DataTypeResponse.from(require(id)); }
 
     @Transactional
-    public DataTypeDto.Response create(DataTypeDto.Request input) {
+    public DataTypeResponse create(DataTypeRequest input) {
         var entity = new DataType(UUID.randomUUID());
         apply(entity, input);
-        return DataTypeDto.Response.from(repository.save(entity));
+        return DataTypeResponse.from(repository.save(entity));
     }
 
     @Transactional
-    public DataTypeDto.Response update(UUID id, DataTypeDto.Request input) {
+    public DataTypeResponse update(UUID id, DataTypeRequest input) {
         var entity = require(id);
         apply(entity, input);
-        return DataTypeDto.Response.from(entity);
+        return DataTypeResponse.from(entity);
     }
 
     /** Rejects deletion while any policy references the rule; the database also protects concurrent races. */
     @Transactional
     public void delete(UUID id) {
         var entity = require(id);
-        if (dataSets.existsByDataTypes_Id(id)) {
-            throw new ApiException(HttpStatus.CONFLICT, "Data Type is referenced by a Data Set; remove the reference first");
+        var policies = dataSets.findByDataTypes_Id(id, PageRequest.of(0, 10, Sort.by("id")));
+        if (!policies.isEmpty()) {
+            String references = policies.stream().map(policy -> policy.getName() + " (" + policy.getId() + ")")
+                .collect(java.util.stream.Collectors.joining(", "));
+            throw new ApiException(HttpStatus.CONFLICT, "Data Type is referenced by Data Sets (up to 10 shown): "
+                + references + ". Remove these references before deletion.");
         }
         repository.delete(entity);
         repository.flush(); // Surface foreign-key races inside the exception handler.
@@ -59,7 +65,7 @@ public class DataTypeService {
         return repository.findById(id).orElseThrow(() -> ApiException.notFound("Data Type"));
     }
 
-    private void apply(DataType entity, DataTypeDto.Request input) {
+    private void apply(DataType entity, DataTypeRequest input) {
         // Compare without case but preserve spelling: lowercasing can expand some Unicode characters.
         var unique = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
         var keywords = new ArrayList<String>();

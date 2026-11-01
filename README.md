@@ -35,7 +35,7 @@ Alternatively, with Node.js installed:
 npx --yes newman@6 run postman/mini-dlp.postman_collection.json
 ```
 
-The collection contains **46 requests and 67 assertions**, including detailed scan explanations and invalid-input cases.
+The collection contains **46 requests and 71 assertions**, including detailed scan explanations and invalid-input cases.
 
 | Method | Endpoint | Purpose |
 |---|---|---|
@@ -44,6 +44,8 @@ The collection contains **46 requests and 67 assertions**, including detailed sc
 | POST / GET | `/api/datasets` | Create / list policies |
 | GET / PUT / DELETE | `/api/datasets/{id}` | Read / replace / delete a policy |
 | POST | `/api/scan` | Inspect text using one policy |
+
+List responses keep their JSON arrays and include `X-Total-Count`, `X-Page` and `X-Page-Size` headers. Referenced-rule deletion errors name up to ten blocking policies and their IDs.
 
 Create a rule (`description` is optional and defaults to an empty string):
 
@@ -84,7 +86,7 @@ Add `"include_details": true` to a scan request for per-rule thresholds, decisio
 
 ## Structure and tests
 
-Feature packages are `datatype`, `dataset`, `scan`, and shared error handling in `common`. Controllers handle HTTP, services own business logic/transactions, and repositories access PostgreSQL. Flyway creates the schema; Hibernate validates it. Scans fetch policy configuration in one query.
+Feature packages are `datatype`, `dataset`, `scan`, and shared error handling in `common`. API records live in a `dto` subpackage within each feature, with one named DTO per file. Controllers handle HTTP, services own business logic/transactions, and repositories access PostgreSQL. Flyway creates the schema; Hibernate validates it. The scan service obtains an immutable policy snapshot from `DataSetService`, loaded in one query, then matches outside the database transaction. A bounded cache reuses compiled patterns while each scan creates independent matchers.
 
 With JDK 21+ and Maven installed:
 
@@ -104,6 +106,6 @@ node scripts/verify-http.mjs
 It verifies 120 scans in batches of eight and removes temporary data. This is a correctness check, not a production capacity benchmark. GitHub Actions automates Java, PostgreSQL, Docker, Postman and concurrent HTTP checks.
 
 * [Technical reference](docs/REFERENCE.md): input limits, HTTP errors, configuration and tradeoffs.
-* [Test matrix](docs/TESTING.md) and [verified results](docs/VERIFICATION.md): 229 passing Java test cases and real HTTP checks.
+* [Test matrix](docs/TESTING.md) and [verified results](docs/VERIFICATION.md): 234 passing Java test cases and real HTTP checks.
 
 This local evaluation service does not implement authentication or production deployment controls.
